@@ -1,0 +1,29 @@
+name: ✨ Suggest a tool
+description: Know something that clears the "whoa" bar?
+labels: [tool-suggestion]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Tool name
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Official URL
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options: [Fun, Mac Candy, Agent Power, Creator, Windows Candy]
+    validations:
+      required: true
+  - type: input
+    id: pitch
+    attributes:
+      label: One-line pitch — why is it a "whoa"?
+    validations:
+      required: true

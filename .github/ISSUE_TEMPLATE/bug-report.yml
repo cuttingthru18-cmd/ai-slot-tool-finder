@@ -1,0 +1,15 @@
+name: 🐛 Bug report
+description: The machine itself is misbehaving
+labels: [bug]
+body:
+  - type: input
+    id: what
+    attributes:
+      label: What's broken?
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser + device
+      placeholder: Safari on iPhone / Chrome on Windows...

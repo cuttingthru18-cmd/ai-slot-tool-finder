@@ -1,50 +1,60 @@
 # 🎰 AI Slot Tool Finder
 
-**Pull the lever. Discover a tool you'd never find yourself.**
+A free, open-source web app for discovering curated tools — pull a slot-machine lever, get a tool you'd probably never find yourself.
 
-A slot machine loaded with **157 hand-curated tools, toys, and AI wonders** from across the internet — live-radio globes, browser flight simulators, AI that writes cited research papers, free Photoshop clones, menu-bar magic for your Mac. Pick a category, pull, and the winner opens instantly.
+- **157 manually reviewed entries** across 5 categories
+- **One self-contained HTML file** — no build step, no dependencies
+- **No login, no backend, no analytics, no tracking**
+- Works locally (download and double-click) or hosted via GitHub Pages
 
-No signups. No tracking. No ads. Free forever.
+Maintained by **YL MRKT**. AI research agents assisted with discovery; **every listed tool was manually reviewed before inclusion.**
 
 ![AI Slot Tool Finder](screenshots/main.png)
 
-## 🕹️ Try it now
+## Try it
 
-**[▶ PLAY IT HERE](https://cuttingthru18-cmd.github.io/ai-slot-tool-finder/)** — works in any browser, any device.
+**[▶ Play it here](https://cuttingthru18-cmd.github.io/ai-slot-tool-finder/)** — any browser, any device.
 
-Or run it locally: download `index.html`, double-click it. That's the whole install.
+Or run it locally: download `index.html` and open it. That's the entire install.
 
-## 🎡 What's inside
+## What's inside
 
 | Category | Count | What it means |
 |---|---|---|
-| 🟣 **Fun** | 50 | Pure toys — websites that exist only to amaze: globes, games, art, sound. Zero productivity, maximum wonder. |
-| 🟡 **Mac Candy** | 31 | Free apps that make your Mac prettier or smoother — menu bar magic, window tricks, interface glow-ups. |
-| 🟢 **Agent Power** | 25 | AI tools and playgrounds — things that build, write, research, or act on their own. The future, try-able today. |
-| 🔵 **Creator** | 23 | Weapons for content makers — editors, converters, audio fixers, screenshot beautifiers. |
-| 🪟 **Windows Candy** | 28 | Free apps that glow up a Windows PC — PowerToys, living wallpapers, the other candy store. |
+| 🟣 **Fun** | 50 | Websites that exist to amaze — globes, games, art, sound. |
+| 🟡 **Mac Candy** | 31 | Free apps that make a Mac prettier or smoother. |
+| 🟢 **Agent Power** | 25 | AI tools and playgrounds you can try today. |
+| 🔵 **Creator** | 23 | Editors, converters, audio fixers, screenshot tools. |
+| 🪟 **Windows Candy** | 28 | Free apps that glow up a Windows PC. |
 
-Every entry passed the same quality gate: **free (or a real free tier), alive, safe, and genuinely "whoa."** The machine deals with no repeats — you'll see all 157 before you see one twice. Prefer browsing to gambling? Click *"INSIDE THE MACHINE"* at the bottom for the full list.
+The machine deals without repeats — you'll see all 157 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
 
-## 🤖 The AI assistant button
+## Why trust this?
 
-Run an AI assistant like [Claude Code](https://claude.com/claude-code)? When the machine picks an installable tool, hit **COPY FOR YOUR AI ASSISTANT** and paste the message — your assistant vets and installs it for you. No assistant? The tool's page opens either way; install it the normal way.
+- **No account required** — nothing to sign up for, ever
+- **No backend** — static HTML only; the page can't collect anything
+- **No analytics or trackers** — verify it yourself: it's one readable file
+- **Every link manually reviewed** before inclusion (free or real free tier · actively maintained · official source)
+- **Automated weekly link checks** run every Monday via GitHub Actions; dead links are flagged as issues and removed
+- Last full link review: **2026-07-10**
 
-## 📌 Make it feel like an app
+## The AI assistant button
 
-- **Mac (Safari):** open the page → File → **Add to Dock**. Icon in your Dock, its own window.
-- **iPhone/iPad:** Share → **Add to Home Screen**.
+If you run an AI assistant like [Claude Code](https://claude.com/claude-code): when the machine picks an installable tool, **COPY FOR YOUR AI ASSISTANT** copies a ready-made install request to paste to it. No assistant? The tool's page opens either way — install it normally.
 
-## 🛠️ How it was made
+## Make it feel like an app
 
-Curated and built by an AI assistant (Claude Code) directed by a human with taste — the tool list was harvested by research agents from sources like [awesome-mac](https://github.com/jaywcjlove/awesome-mac), [tools.simonwillison.net](https://tools.simonwillison.net), [neal.fun](https://neal.fun), the [Charm](https://github.com/charmbracelet) suite, and dozens of indie builders' portfolios, then quality-gated by hand. One HTML file, zero dependencies.
+- **Mac (Safari):** File → **Add to Dock**
+- **iPhone/iPad:** Share → **Add to Home Screen**
 
-Found a dead link, or know a tool that clears the "whoa" bar? Open an issue or PR — the machine grows.
+## Contributing
 
-## 📄 License
+Found a dead link or know a tool that belongs here? [Open an issue](../../issues/new/choose) — there are templates for dead links, tool suggestions, and bugs. See [CONTRIBUTING.md](CONTRIBUTING.md) for the quality bar.
 
-MIT — do whatever you want with it. The tools inside belong to their own brilliant creators; this machine just introduces you.
+## How it was made
 
----
+The tool list was researched with AI agents across sources like [awesome-mac](https://github.com/jaywcjlove/awesome-mac), [tools.simonwillison.net](https://tools.simonwillison.net), [neal.fun](https://neal.fun), and the [Charm](https://github.com/charmbracelet) suite — then each entry was manually reviewed and quality-gated before inclusion. The app itself is one hand-written HTML file.
 
-*First free product shipped by YL MRKT. 🎰 Good luck at the reels.*
+## License
+
+MIT — see [LICENSE](LICENSE). The tools inside belong to their own creators; this machine just introduces you.
