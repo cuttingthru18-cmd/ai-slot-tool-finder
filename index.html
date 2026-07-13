@@ -70,10 +70,44 @@ h1{font-size:clamp(26px,5vw,38px); margin:0 0 10px; letter-spacing:-.01em; text-
     rgba(255,255,255,.14) 0%, rgba(255,255,255,.03) 22%,
     transparent 45%, transparent 55%,
     rgba(0,0,0,.30) 78%, rgba(0,0,0,.55) 100%)}
+/* each reel flashes as IT lands — the small hit */
 .reel.hit{box-shadow:
     0 0 0 2px var(--gold), 0 0 0 3px #2a2418, 0 0 0 4px #8a7233,
     inset 0 14px 22px rgba(0,0,0,.85), inset 0 -14px 22px rgba(0,0,0,.85),
     0 0 26px rgba(255,215,0,.55), 0 6px 20px rgba(0,0,0,.6)}
+
+/* THE WIN — all three fire together once the third one lands. This is the payoff. */
+.reel.win{animation:winglow 1.5s cubic-bezier(.22,1,.36,1) 1}
+@keyframes winglow{
+  0%   {box-shadow:0 0 0 2px var(--gold),0 0 0 3px #2a2418,0 0 0 4px #8a7233,
+        inset 0 14px 22px rgba(0,0,0,.85),inset 0 -14px 22px rgba(0,0,0,.85),
+        0 0 30px rgba(255,215,0,.6); transform:scale(1)}
+  14%  {box-shadow:0 0 0 3px #fff6c9,0 0 0 5px var(--gold),0 0 0 7px #8a7233,
+        inset 0 10px 20px rgba(0,0,0,.6),inset 0 -10px 20px rgba(0,0,0,.6),
+        0 0 74px rgba(255,215,0,.95), 0 0 130px rgba(255,180,0,.55); transform:scale(1.055)}
+  34%  {box-shadow:0 0 0 2px var(--gold),0 0 0 4px #8a7233,
+        inset 0 12px 22px rgba(0,0,0,.8),inset 0 -12px 22px rgba(0,0,0,.8),
+        0 0 40px rgba(255,215,0,.6); transform:scale(1)}
+  52%  {box-shadow:0 0 0 3px #fff6c9,0 0 0 5px var(--gold),0 0 0 7px #8a7233,
+        inset 0 10px 20px rgba(0,0,0,.6),inset 0 -10px 20px rgba(0,0,0,.6),
+        0 0 66px rgba(255,215,0,.85), 0 0 110px rgba(255,180,0,.45); transform:scale(1.04)}
+  100% {box-shadow:0 0 0 2px #6b5a2e,0 0 0 3px #2a2418,0 0 0 4px #8a7233,
+        inset 0 14px 22px rgba(0,0,0,.92),inset 0 -14px 22px rgba(0,0,0,.92),
+        0 6px 20px rgba(0,0,0,.6); transform:scale(1)}
+}
+/* the symbol itself pops on the win */
+.reel.win .cell{animation:symbolpop 1.5s cubic-bezier(.22,1.5,.36,1) 1}
+@keyframes symbolpop{
+  0%{transform:scale(1)} 14%{transform:scale(1.18)} 34%{transform:scale(1)}
+  52%{transform:scale(1.12)} 100%{transform:scale(1)}
+}
+/* and the payline blazes across all three */
+.reels.win::before{animation:payline 1.5s ease-out 1}
+@keyframes payline{
+  0%,100%{background:linear-gradient(90deg,transparent,rgba(255,215,0,.55),transparent); height:2px; margin-top:-1px}
+  14%,52%{background:linear-gradient(90deg,rgba(255,215,0,0),#fff6c9,rgba(255,215,0,0)); height:4px; margin-top:-2px;
+          box-shadow:0 0 22px rgba(255,215,0,.9)}
+}
 .strip{display:flex; flex-direction:column; will-change:transform}
 .cell{height:124px; display:flex; align-items:center; justify-content:center;
   font-size:56px; line-height:1; user-select:none;
@@ -342,9 +376,24 @@ function spin(){
         strips[i].style.transition='transform 180ms ease-out';
         strips[i].style.transform='translateY(-'+(SPINS*CELL)+'px)';
       },160);
-      reels[i].classList.add('hit');                       // gold rim flash
+      reels[i].classList.add('hit');                       // small flash as THIS reel lands
       setTimeout(function(){ reels[i].classList.remove('hit') }, 520);
-      if(i===2) setTimeout(function(){ land(toy) }, 220);
+
+      if(i===2){
+        // ALL THREE LANDED — the win. Everything fires at once.
+        var reelsEl=document.querySelector('.reels');
+        reels.forEach(function(r){ r.classList.remove('hit','win'); });
+        reelsEl.classList.remove('win');
+        void reels[0].offsetWidth;                         // restart the animation cleanly
+        reels.forEach(function(r){ r.classList.add('win') });
+        reelsEl.classList.add('win');
+        if(window.__pulse) window.__pulse();               // background shockwave on the win
+        setTimeout(function(){
+          reels.forEach(function(r){ r.classList.remove('win') });
+          reelsEl.classList.remove('win');
+        }, 1550);
+        setTimeout(function(){ land(toy) }, 340);          // card lands INTO the glow
+      }
     }, dur);
   });
 }
