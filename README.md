@@ -21,11 +21,11 @@ Or run it locally: download `index.html` and open it. That's the entire install.
 
 | Category | Count | What it means |
 |---|---|---|
-| 🟣 **Fun** | 50 | Websites that exist to amaze — globes, games, art, sound. |
-| 🟡 **Mac Candy** | 31 | Free apps that make a Mac prettier or smoother. |
-| 🟢 **Agent Power** | 25 | AI tools and playgrounds you can try today. |
-| 🔵 **Creator** | 23 | Editors, converters, audio fixers, screenshot tools. |
-| 🪟 **Windows Candy** | 28 | Free apps that glow up a Windows PC. |
+| 🟣 **Fun** | 79 | Websites that exist to amaze — globes, games, art, sound. |
+| 🟡 **Mac Candy** | 36 | Free apps that make a Mac prettier or smoother. |
+| 🟢 **Agent Power** | 29 | AI tools and playgrounds you can try today. |
+| 🔵 **Creator** | 34 | Editors, converters, audio fixers, screenshot tools. |
+| 🪟 **Windows Candy** | 32 | Free apps that glow up a Windows PC. |
 
 The machine deals without repeats — you'll see all 210 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
 

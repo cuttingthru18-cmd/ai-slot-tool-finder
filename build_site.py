@@ -487,5 +487,6 @@ document.getElementById('inv').innerHTML =
 </html>
 """
 
-open("index.html", "w", encoding="utf-8").write(HTML.replace("__TOYS__", TOYS))
+_out = os.path.join(_here, "index.html")   # write where we read — never the cwd
+open(_out, "w", encoding="utf-8").write(HTML.replace("__TOYS__", TOYS))
 print(f"  index.html rebuilt · {len(json.loads(TOYS))} tools spliced in untouched")
