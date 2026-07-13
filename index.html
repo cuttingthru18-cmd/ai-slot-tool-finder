@@ -422,7 +422,7 @@ function land(toy){
 }
 
 /* ---- the lever: drag it, feel it resist, let go ---- */
-var dragging=false, startY=0, pull=0, MAXPULL=104;
+var dragging=false, startY=0, pull=0, MAXPULL=104, moved=false;
 function setPull(p){
   pull=Math.max(0,Math.min(MAXPULL,p));
   lever.style.transition = dragging ? 'none' : '';
@@ -439,13 +439,26 @@ function release(){
 }
 lever.addEventListener('pointerdown',function(e){
   if(spinning) return;
-  dragging=true; startY=e.clientY; lever.setPointerCapture(e.pointerId);
+  dragging=true; moved=false; startY=e.clientY; lever.setPointerCapture(e.pointerId);
 });
-lever.addEventListener('pointermove',function(e){ if(dragging) setPull(e.clientY-startY); });
+lever.addEventListener('pointermove',function(e){
+  if(!dragging) return;
+  var d = e.clientY-startY;
+  if(Math.abs(d) > 3) moved=true;                        // a real drag, not a shaky click
+  setPull(d);
+});
 lever.addEventListener('pointerup',release);
 lever.addEventListener('pointercancel',release);
-/* click and keyboard still work — dragging is a delight, not a requirement */
-lever.addEventListener('click',function(){ if(!spinning && pull===0) spin(); });
+/* Click and keyboard still work — dragging is a delight, not a requirement.
+   But a drag ALSO emits a click when the pointer comes up, and release() has already
+   zeroed `pull` by then. Without this guard that click sails through and spins the
+   machine — so a half-hearted nudge you deliberately abandoned would fire anyway,
+   and the lever's whole "commit to it" feel would be a lie. If the pointer moved,
+   release() already made the call. Say nothing. */
+lever.addEventListener('click',function(){
+  if(moved){ moved=false; return; }
+  if(!spinning && pull===0) spin();
+});
 lever.addEventListener('keydown',function(e){
   if(e.key==='Enter'||e.key===' '){ e.preventDefault(); if(!spinning) spin(); }
 });
