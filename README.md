@@ -2,7 +2,7 @@
 
 A free, open-source web app for discovering curated tools — pull a slot-machine lever, get a tool you'd probably never find yourself.
 
-- **210 manually reviewed entries** across 5 categories
+- **210 manually reviewed entries** across 5 categories — every link checked, zero duplicates
 - **One self-contained HTML file** — no build step, no dependencies
 - **No login, no backend, no analytics, no tracking**
 - Works locally (download and double-click) or hosted via GitHub Pages
@@ -37,6 +37,21 @@ The machine deals without repeats — you'll see all 210 before any repeat. Pref
 - **Every link manually reviewed** before inclusion (free or real free tier · actively maintained · official source)
 - **Automated weekly link checks** run every Monday via GitHub Actions; dead links are flagged as issues and removed
 - Last full link review: **2026-07-10**
+
+## The machine
+
+Grab the red knob and **drag it down the track** — it resists, bottoms out, and springs back.
+Only a committed pull fires it (a nudge does nothing). Click or hit Enter if you'd rather.
+
+The reels are real strips: they blur, decelerate, and **sharpen just before they stop** — the
+symbol comes into focus as it slows, the way a physical reel does. Then they overshoot the
+payline and kick back. When all three land, everything fires at once — the rims throb gold,
+the symbols pop, the payline blazes, and the background flares.
+
+The background is three parallax layers whose hue shifts with the category you pick. It pauses
+when the tab is hidden.
+
+Everything respects `prefers-reduced-motion`.
 
 ## The AI assistant button
 

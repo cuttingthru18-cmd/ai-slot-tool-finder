@@ -89,7 +89,7 @@ NEW = [
 
 
 def find_array(html):
-    """Locate the TOYS array by BRACKET MATCHING, not regex.
+    r"""Locate the TOYS array by BRACKET MATCHING, not regex.
 
     `var TOYS=(\[.*?\]);` fails: the non-greedy match stops at the first `]` it sees, which
     lands inside the array, and json.loads then chokes on "Extra data". Count brackets — and

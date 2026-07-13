@@ -11,9 +11,17 @@ entire point of a slot machine and the thing the old one was missing.
 Everything that worked is preserved: the no-repeat bag shuffle, categories, the card,
 copy-for-AI, and the full browsable inventory.
 """
-import json, io, os
+import json, os, sys
 
-TOYS = open("/tmp/toys.json", encoding="utf-8").read()
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "scripts"))
+from add_tools import find_array          # bracket-matcher — do NOT regex the TOYS array
+
+# Read the tools straight out of the live index.html. Self-contained: no temp files, and
+# running this never touches the data — the array is spliced back byte-identical.
+_here = os.path.dirname(os.path.abspath(__file__))
+_html = open(os.path.join(_here, "index.html"), encoding="utf-8").read()
+_s, _e = find_array(_html)
+TOYS = _html[_s:_e]
 
 HTML = r"""<!doctype html>
 <html lang="en">
