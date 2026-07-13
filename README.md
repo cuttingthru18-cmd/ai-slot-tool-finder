@@ -2,7 +2,7 @@
 
 A free, open-source web app for discovering curated tools — pull a slot-machine lever, get a tool you'd probably never find yourself.
 
-- **157 manually reviewed entries** across 5 categories
+- **210 manually reviewed entries** across 5 categories
 - **One self-contained HTML file** — no build step, no dependencies
 - **No login, no backend, no analytics, no tracking**
 - Works locally (download and double-click) or hosted via GitHub Pages
@@ -27,7 +27,7 @@ Or run it locally: download `index.html` and open it. That's the entire install.
 | 🔵 **Creator** | 23 | Editors, converters, audio fixers, screenshot tools. |
 | 🪟 **Windows Candy** | 28 | Free apps that glow up a Windows PC. |
 
-The machine deals without repeats — you'll see all 157 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
+The machine deals without repeats — you'll see all 210 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
 
 ## Why trust this?
 
