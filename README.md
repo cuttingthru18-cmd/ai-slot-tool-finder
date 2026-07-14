@@ -40,8 +40,11 @@ The machine deals without repeats — you'll see all 210 before any repeat. Pref
 
 ## The machine
 
-Grab the red knob and **drag it down the track** — it resists, bottoms out, and springs back.
-Only a committed pull fires it (a nudge does nothing). Click or hit Enter if you'd rather.
+**Tap the lever** — or hit Enter — and it fires straight away.
+
+Or grab the red knob and **drag it down the track**: it resists, bottoms out, and springs back.
+Once you start dragging you're committing to a pull, so the drag only engages if you take it past
+halfway. Let go short of that and it springs back without firing, the way an abandoned pull should.
 
 The reels are real strips: they blur, decelerate, and **sharpen just before they stop** — the
 symbol comes into focus as it slows, the way a physical reel does. Then they overshoot the
