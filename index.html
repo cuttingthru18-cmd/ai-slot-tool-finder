@@ -357,6 +357,12 @@ function spin(){
   var toy=draw();
   reels.forEach(function(r){ r.classList.add('blur') });
   strips.forEach(function(s){ buildStrip(s, toy.e) });
+  // Cells are 124px on desktop but 92px on mobile (CSS media query). The strip
+  // travel is SPINS*CELL, so a HARDCODED CELL landed the reel between cells on
+  // phones — the winning symbol fell outside the window and read as blank/glitchy
+  // even on a match. Measure the real rendered cell height each spin so it lands
+  // dead-center on any screen or orientation.
+  CELL = (strips[0].firstElementChild && strips[0].firstElementChild.offsetHeight) || CELL;
 
   if(window.__pulse) window.__pulse();                    // shockwave through the background
 
