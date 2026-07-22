@@ -28,7 +28,7 @@ HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>🎰 AI Slot Tool Finder</title>
-<meta name="description" content="Pull the lever, discover a tool you'd never find yourself — 210 hand-curated free tools, toys, and AI wonders. No signup, no tracking, one HTML file.">
+<meta name="description" content="Pull the lever, discover a tool you'd never find yourself — __N__ hand-curated free tools, toys, and AI wonders. No signup, no tracking, one HTML file.">
 <style>
 :root{
   --ink:#1c1b18; --bg:#0e0d0b; --panel:#191713; --line:#3a3222;
@@ -221,10 +221,10 @@ footer a{color:var(--gold-dim)}
 <canvas id="bg"></canvas><div id="vig"></div>
 
 <h1>🎰 AI Slot Tool Finder</h1>
-<p class="sub"><b>210 hand-curated</b> tools, toys and AI wonders — the stuff you'd never find on your own. Pick a category, <b>pull the lever</b>, and the winner opens instantly. Free forever, no signup.</p>
+<p class="sub"><b>__N__ hand-curated</b> tools, toys and AI wonders — the stuff you'd never find on your own. Pick a category, <b>pull the lever</b>, and the winner opens instantly. Free forever, no signup.</p>
 
 <div id="cats"></div>
-<p id="catdesc">All 210 in one machine — pure discovery chaos.</p>
+<p id="catdesc">All __N__ in one machine — pure discovery chaos.</p>
 
 <div class="machine" id="machine">
   <div class="cabinet">
@@ -333,7 +333,7 @@ var strips=reels.map(function(r){return r.querySelector('.strip')});
 var spinning=false, bag=[], cat='all';
 
 var CATS=[
- ['all','🎰 Everything',45,'All 210 in one machine — pure discovery chaos.'],
+ ['all','🎰 Everything',45,'All __N__ in one machine — pure discovery chaos.'],
  ['fun','🟣 Fun',285,'Pure toys: sites that exist only to amaze — globes, games, art, sound. Zero productivity, maximum wonder.'],
  ['candy','🟡 Mac Candy',45,'Free apps that make your Mac prettier or smoother — menu bar magic, window tricks, interface glow-ups.'],
  ['agent','🟢 Agent Power',140,'AI tools and playgrounds — things that build, write, research, or act on their own. The future, try-able today.'],
@@ -507,5 +507,6 @@ document.getElementById('inv').innerHTML =
 """
 
 _out = os.path.join(_here, "index.html")   # write where we read — never the cwd
-open(_out, "w", encoding="utf-8").write(HTML.replace("__TOYS__", TOYS))
-print(f"  index.html rebuilt · {len(json.loads(TOYS))} tools spliced in untouched")
+_n = len(json.loads(TOYS))   # self-updating count in the prose — never hand-edit again
+open(_out, "w", encoding="utf-8").write(HTML.replace("__TOYS__", TOYS).replace("__N__", str(_n)))
+print(f"  index.html rebuilt · {_n} tools spliced in untouched")
