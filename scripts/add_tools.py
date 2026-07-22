@@ -120,6 +120,14 @@ def norm(u):
 
 
 def main():
+    # Candidates default to the NEW list above, but an optional JSON file path
+    # (same object shape) can be passed to feed a batch without editing this file.
+    candidates = NEW
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], encoding="utf-8") as f:
+            candidates = json.load(f)
+        print(f"  candidates: {len(candidates)} from {sys.argv[1]}")
+
     html = open(INDEX, encoding="utf-8").read()
     start, end = find_array(html)
     toys = json.loads(html[start:end])
@@ -129,7 +137,7 @@ def main():
     have_n = {t["n"].strip().lower() for t in toys}
 
     added, skipped = [], []
-    for t in NEW:
+    for t in candidates:
         if norm(t["u"]) in have_u:
             skipped.append((t["n"], "url already listed")); continue
         if t["n"].strip().lower() in have_n:
