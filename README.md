@@ -2,7 +2,7 @@
 
 A free, open-source web app for discovering curated tools — pull a slot-machine lever, get a tool you'd probably never find yourself.
 
-- **258 manually reviewed entries** across 5 categories — every link checked, zero duplicates
+- **379 manually reviewed entries** across 5 categories — every link checked, zero duplicates
 - **One self-contained HTML file** — no build step, no dependencies
 - **No login, no backend, no analytics, no tracking**
 - Works locally (download and double-click) or hosted via GitHub Pages
@@ -21,13 +21,13 @@ Or run it locally: download `index.html` and open it. That's the entire install.
 
 | Category | Count | What it means |
 |---|---|---|
-| 🟣 **Fun** | 92 | Websites that exist to amaze — globes, games, art, sound. |
-| 🟡 **Mac Candy** | 42 | Free apps that make a Mac prettier or smoother. |
-| 🟢 **Agent Power** | 42 | AI tools and playgrounds you can try today. |
-| 🔵 **Creator** | 45 | Editors, converters, audio fixers, screenshot tools. |
-| 🪟 **Windows Candy** | 37 | Free apps that glow up a Windows PC. |
+| 🟣 **Fun** | 120 | Websites that exist to amaze — globes, games, art, sound. |
+| 🟡 **Mac Candy** | 57 | Free apps that make a Mac prettier or smoother. |
+| 🟢 **Agent Power** | 87 | AI tools, playgrounds, and installable skills/MCP servers you can try today. |
+| 🔵 **Creator** | 60 | Editors, converters, audio fixers, screenshot tools. |
+| 🪟 **Windows Candy** | 55 | Free apps that glow up a Windows PC. |
 
-The machine deals without repeats — you'll see all 258 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
+The machine deals without repeats — you'll see all 379 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
 
 ## Why trust this?
 
