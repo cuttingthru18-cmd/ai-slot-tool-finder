@@ -189,40 +189,64 @@ struct SlotView: View {
                 .font(.system(size: 10, design: .monospaced))
                 .foregroundColor(Color(hex: 0x8a8478))
         }
-        .padding(.horizontal, 14).padding(.vertical, 10)
+        .padding(.horizontal, 14)
+        .padding(.top, 14).padding(.bottom, 10)   // the popover crowds its own top edge
     }
 
     private var machine: some View {
-        HStack(spacing: 14) {
-            HStack(spacing: 6) {
-                ForEach(0..<3, id: \.self) { i in
-                    Text(shelf.reels[i])
-                        .font(.system(size: 30))
-                        .frame(width: 62, height: 74)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color(hex: 0x191713)))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: 0x3a3222), lineWidth: 1))
+        HStack(spacing: 12) {
+            ZStack {
+                HStack(spacing: 6) {
+                    ForEach(0..<3, id: \.self) { i in
+                        Text(shelf.reels[i].isEmpty ? "🎰" : shelf.reels[i])
+                            .font(.system(size: 32))
+                            .frame(width: 62, height: 78)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(LinearGradient(
+                                        colors: [Color(hex: 0x0b0a09), Color(hex: 0x211d17), Color(hex: 0x0b0a09)],
+                                        startPoint: .top, endPoint: .bottom))
+                            )
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: 0x3a3222), lineWidth: 1))
+                    }
                 }
+                // The payline. Without it the three cells read as three icons in boxes
+                // rather than one machine that has landed on something.
+                Rectangle()
+                    .fill(Color(hex: 0xFFD700).opacity(shelf.spinning ? 0.10 : 0.30))
+                    .frame(height: 1)
+                    .padding(.horizontal, 4)
+                    .animation(.easeOut(duration: 0.25), value: shelf.spinning)
             }
             lever
         }
-        .padding(.vertical, 16)
+        .padding(.top, 6)
+        .padding(.bottom, 14)
     }
 
-    /// The handle drops while the reels run. It is not a progress bar — it is the reason
-    /// the thing feels like a pull instead of a button.
+    /// A ball riding ON a rod, starting at the top and dropping while the reels run.
+    ///
+    /// The first version stacked the ball ABOVE the rod in a VStack and then offset it
+    /// downward, so it rendered as a glowing bead impaled through the middle of a stick —
+    /// not a lever, and the first thing YL pointed at. A ZStack puts the ball on the rod
+    /// where a lever's ball actually lives, and the travel stays inside the housing.
     private var lever: some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .top) {
+            Capsule()
+                .fill(Color(hex: 0x2a2419))
+                .overlay(Capsule().stroke(Color(hex: 0x3a3222), lineWidth: 1))
+                .frame(width: 6, height: 78)
+
             Circle()
-                .fill(Color(hex: 0xFFD700))
-                .frame(width: 20, height: 20)
-                .shadow(color: Color(hex: 0xFFD700).opacity(0.5), radius: 6)
-                .offset(y: shelf.spinning ? 34 : 0)
-                .animation(.spring(response: 0.32, dampingFraction: 0.55), value: shelf.spinning)
-            Rectangle()
-                .fill(Color(hex: 0x3a3222))
-                .frame(width: 4, height: 54)
+                .fill(RadialGradient(colors: [Color(hex: 0xFFE873), Color(hex: 0xC9A227)],
+                                     center: .topLeading, startRadius: 1, endRadius: 24))
+                .overlay(Circle().stroke(Color(hex: 0x8a6a00), lineWidth: 0.5))
+                .frame(width: 22, height: 22)
+                .shadow(color: Color(hex: 0xFFD700).opacity(0.35), radius: 4)
+                .offset(y: shelf.spinning ? 56 : 0)
+                .animation(.spring(response: 0.30, dampingFraction: 0.6), value: shelf.spinning)
         }
-        .frame(height: 74)
+        .frame(width: 24, height: 78)
         .contentShape(Rectangle())
         .onTapGesture { shelf.pull() }
         .help("Pull")
