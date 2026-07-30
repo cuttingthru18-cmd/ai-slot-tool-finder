@@ -6,6 +6,7 @@ A free, open-source web app for discovering curated tools — pull a slot-machin
 - **One self-contained HTML file** — no build step, no dependencies
 - **No login, no backend, no analytics, no tracking**
 - Works locally (download and double-click) or hosted via GitHub Pages
+- **[🎰 Mac menu bar app](#-put-it-in-your-menu-bar-mac)** — 616 KB, native, works offline
 
 Maintained by **YL MRKT**. AI research agents assisted with discovery; **every listed tool was manually reviewed before inclusion.**
 
@@ -60,7 +61,65 @@ Everything respects `prefers-reduced-motion`.
 
 If you run an AI assistant like [Claude Code](https://claude.com/claude-code): when the machine picks an installable tool, **COPY FOR YOUR AI ASSISTANT** copies a ready-made install request to paste to it. No assistant? The tool's page opens either way — install it normally.
 
-## Make it feel like an app
+## 🎰 Put it in your menu bar (Mac)
+
+The machine, one click away, from inside any app — no tab, no URL, no signup.
+
+**Install it:**
+
+1. Download **`AI-Slot-Tool-Finder-macOS.zip`** from the [latest release](../../releases/latest) and unzip it
+2. Drag **AI Slot Tool Finder.app** to your **Applications** folder
+3. **Right-click the app → Open**, then click **Open** in the dialog
+
+> **Step 3 matters, and only the first time.** The app isn't signed with a paid Apple
+> Developer ID ($99/year), so double-clicking it shows *"can't be opened because it is
+> from an unidentified developer."* Right-click → Open is macOS's built-in way to say
+> you trust it. After that it opens normally, forever.
+>
+> Prefer the terminal? `xattr -dr com.apple.quarantine "/Applications/AI Slot Tool Finder.app"`
+
+Then click **🎰** in your menu bar and pull the lever. To have it there every morning:
+**System Settings → General → Login Items → +** and add it.
+
+**Or build it yourself** — it's one Swift file, no dependencies:
+
+```sh
+git clone https://github.com/cuttingthru18-cmd/ai-slot-tool-finder.git
+cd ai-slot-tool-finder/menubar
+./build.sh --install
+```
+
+(Needs Xcode command line tools: `xcode-select --install`.)
+
+### What it does
+
+Same machine as the site: pull the lever, the reels stop left to right, you get one
+tool. Same no-repeat bag — you'll see all 379 before any repeat. Filter by category,
+**Open** it, or **Copy for AI** to paste an install request to your assistant.
+
+| | |
+|---|---|
+| **616 KB** | Native Swift. Not Electron — that would be ~200MB for the same thing |
+| **Works offline** | The full shelf ships inside the app; the network is a refresh, never a dependency |
+| **Never needs updating** | Tools are fetched from [`tools.json`](tools.json) once a day, so new tools just appear |
+| **No account, no analytics** | Same posture as the site. Nothing is collected, nothing phones home except the tool list |
+
+### Building on the tool list
+
+`tools.json` is the same 379 entries the site uses, written from the identical array
+so the two can't drift. It's served from GitHub Pages and free to use:
+
+```
+https://cuttingthru18-cmd.github.io/ai-slot-tool-finder/tools.json
+```
+
+```json
+{"n": "Radio Garden", "e": "📻", "c": "fun",
+ "d": "Spin a 3D globe and drop into any live radio station on Earth…",
+ "u": "https://radio.garden"}
+```
+
+## Make it feel like an app (any platform)
 
 - **Mac (Safari):** File → **Add to Dock**
 - **iPhone/iPad:** Share → **Add to Home Screen**

@@ -510,3 +510,13 @@ _out = os.path.join(_here, "index.html")   # write where we read — never the c
 _n = len(json.loads(TOYS))   # self-updating count in the prose — never hand-edit again
 open(_out, "w", encoding="utf-8").write(HTML.replace("__TOYS__", TOYS).replace("__N__", str(_n)))
 print(f"  index.html rebuilt · {_n} tools spliced in untouched")
+
+# The same shelf, in a container a browser is not required to open. The menu bar app
+# reads this; without it an app would have to scrape 100KB of HTML and re-parse the
+# TOYS array on every poll, which breaks the first time this file's shape changes.
+#
+# Written from the SAME spliced array, so it can never disagree with the site — there
+# is still exactly one source of truth, and it is index.html.
+_json_out = os.path.join(_here, "tools.json")
+open(_json_out, "w", encoding="utf-8").write(TOYS)
+print(f"  tools.json written  · {_n} tools, byte-identical to the site")
