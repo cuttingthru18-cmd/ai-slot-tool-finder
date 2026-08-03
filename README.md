@@ -2,7 +2,7 @@
 
 A free, open-source web app for discovering curated tools — pull a slot-machine lever, get a tool you'd probably never find yourself.
 
-- **379 manually reviewed entries** across 5 categories — every link checked, zero duplicates
+- **421 manually reviewed entries** across 5 categories — every link checked, zero duplicates
 - **One self-contained HTML file** — no build step, no dependencies
 - **No login, no backend, no analytics, no tracking**
 - Works locally (download and double-click) or hosted via GitHub Pages
@@ -22,13 +22,13 @@ Or run it locally: download `index.html` and open it. That's the entire install.
 
 | Category | Count | What it means |
 |---|---|---|
-| 🟣 **Fun** | 120 | Websites that exist to amaze — globes, games, art, sound. |
+| 🟣 **Fun** | 127 | Websites that exist to amaze — globes, games, art, sound. |
 | 🟡 **Mac Candy** | 57 | Free apps that make a Mac prettier or smoother. |
-| 🟢 **Agent Power** | 87 | AI tools, playgrounds, and installable skills/MCP servers you can try today. |
-| 🔵 **Creator** | 60 | Editors, converters, audio fixers, screenshot tools. |
+| 🟢 **Agent Power** | 115 | AI tools, playgrounds, and installable skills/MCP servers you can try today. |
+| 🔵 **Creator** | 67 | Editors, converters, audio fixers, screenshot tools. |
 | 🪟 **Windows Candy** | 55 | Free apps that glow up a Windows PC. |
 
-The machine deals without repeats — you'll see all 379 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
+The machine deals without repeats — you'll see all 421 before any repeat. Prefer browsing? Click **"INSIDE THE MACHINE"** at the bottom of the page for the full list.
 
 ## Why trust this?
 
@@ -36,8 +36,10 @@ The machine deals without repeats — you'll see all 379 before any repeat. Pref
 - **No backend** — static HTML only; the page can't collect anything
 - **No analytics or trackers** — verify it yourself: it's one readable file
 - **Every link manually reviewed** before inclusion (free or real free tier · actively maintained · official source)
-- **Automated weekly link checks** run every Monday via GitHub Actions; dead links are flagged as issues and removed
-- Last full link review: **2026-07-10**
+- **Automated weekly link checks** run every Monday via GitHub Actions — every tool URL is
+  fetched, redirects followed, and parked/for-sale domains rejected even when they answer 200.
+  Dead links open an issue automatically and get fixed or removed.
+- Last full link review: **2026-08-03** — all 421 checked, 4 fixed, 1 removed
 
 ## The machine
 
@@ -94,7 +96,7 @@ cd ai-slot-tool-finder/menubar
 ### What it does
 
 Same machine as the site: pull the lever, the reels stop left to right, you get one
-tool. Same no-repeat bag — you'll see all 379 before any repeat. Filter by category,
+tool. Same no-repeat bag — you'll see all 421 before any repeat. Filter by category,
 **Open** it, or **Copy for AI** to paste an install request to your assistant.
 
 | | |
@@ -106,7 +108,7 @@ tool. Same no-repeat bag — you'll see all 379 before any repeat. Filter by cat
 
 ### Building on the tool list
 
-`tools.json` is the same 379 entries the site uses, written from the identical array
+`tools.json` is the same 421 entries the site uses, written from the identical array
 so the two can't drift. It's served from GitHub Pages and free to use:
 
 ```
