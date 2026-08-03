@@ -35,6 +35,12 @@ socket.getaddrinfo = _ipv4_only
 INFRA_ERRORS = ("network is unreachable", "temporary failure in name resolution",
                 "no route to host", "errno 101", "errno -3")
 
+# A timeout is not proof of death and not proof of life. asciinema.org answers 200 from a
+# laptop and times out from a GitHub runner — datacenter ranges get throttled. Counting
+# that as dead opens a bogus issue every Monday; counting it as fine hides real outages.
+# So it gets its own verdict: reported loudly, every week, but it does not fail the run.
+TIMEOUT_ERRORS = ("timed out", "timeout")
+
 # Codes that mean "alive, just defensive": bot walls, rate limits, auth gates.
 OK = set(range(200, 400)) | {401, 403, 429, 405, 406, 999}
 
@@ -136,6 +142,10 @@ def check(tool):
         return {"name": tool["n"], "cat": tool["c"], "url": url, "code": code,
                 "err": f"INFRA (not counted as dead) — {err}", "alive": True,
                 "infra": True}
+    if not alive and code is None and err and any(m in err.lower() for m in TIMEOUT_ERRORS):
+        return {"name": tool["n"], "cat": tool["c"], "url": url, "code": code,
+                "err": f"UNVERIFIED — {err} after 3 tries", "alive": True,
+                "unverified": True}
     if alive:
         p = parked(url)
         if p:
@@ -153,13 +163,16 @@ def main():
 
     dead = [r for r in results if not r["alive"]]
     infra = [r for r in results if r.get("infra")]
+    unver = [r for r in results if r.get("unverified")]
     for r in dead:
         print(f"  DEAD  {r['code'] or r['err']}  {r['name']}  {r['url']}", flush=True)
-    for r in infra:
+    # Never silent. A check that quietly drops entries reads as "everything passed".
+    for r in infra + unver:
         print(f"  SKIP  {r['err']}  {r['name']}  {r['url']}", flush=True)
 
     print(f"\n{len(results) - len(dead)}/{len(results)} alive · {len(dead)} dead"
-          + (f" · {len(infra)} unreachable from this runner (not counted)" if infra else ""))
+          + (f" · {len(infra)} unreachable from this runner" if infra else "")
+          + (f" · {len(unver)} timed out, unverified — check these by hand" if unver else ""))
 
     if dead:
         with open(OUT, "w") as f:
