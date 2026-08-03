@@ -10,16 +10,30 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v4
-      - name: Check all tool links
-        id: lychee
-        uses: lycheeverse/lychee-action@v2
+      - uses: actions/setup-python@v5
         with:
-          args: --no-progress --max-concurrency 8 --timeout 20 --accept 200..399,403,429 index.html
-          fail: false
+          python-version: "3.12"
+
+      # Every tool URL lives inside the TOYS array in index.html, NOT in an <a href>.
+      # This job used to point lychee at index.html: it found TWO links, passed, and
+      # reported green every Monday from 2026-07-09 while checking nothing. Four links
+      # were dead the whole time. Read the data, not the markup.
+      - name: Check every tool URL in tools.json
+        id: check
+        run: python3 scripts/check_links.py
+        continue-on-error: true
+
+      - name: A broken checker is not a clean site
+        if: steps.check.outcome == 'failure' && hashFiles('dead-links.md') == ''
+        run: |
+          echo "::error::check_links.py exited non-zero but wrote no dead-links.md."
+          echo "::error::That is a crashed checker, not a healthy machine. Failing loudly."
+          exit 1
+
       - name: Open issue if dead links found
-        if: steps.lychee.outputs.exit_code != 0
+        if: hashFiles('dead-links.md') != ''
         uses: peter-evans/create-issue-from-file@v5
         with:
           title: "🔗 Dead links detected — machine needs maintenance"
-          content-filepath: ./lychee/out.md
+          content-filepath: ./dead-links.md
           labels: dead-links, automated
