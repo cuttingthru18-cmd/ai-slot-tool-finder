@@ -17,6 +17,24 @@ OUT = os.path.join(ROOT, "dead-links.md")
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/125.0 Safari/537.36")
 
+# GitHub runners have no IPv6 route. Python happily picks a host's AAAA record, gets
+# "[Errno 101] Network is unreachable", and the site looks dead — Townscaper and
+# asciinema were both reported dead by CI while returning 200 everywhere else. Pin
+# resolution to IPv4 so the runner's network shape can't be mistaken for a dead link.
+_getaddrinfo = socket.getaddrinfo
+
+
+def _ipv4_only(host, port, family=0, type=0, proto=0, flags=0):
+    return _getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+
+socket.getaddrinfo = _ipv4_only
+
+# Errors that mean "this runner cannot reach the network", never "this site is gone".
+# Condemning a link on one of these is how a checker starts lying in the other direction.
+INFRA_ERRORS = ("network is unreachable", "temporary failure in name resolution",
+                "no route to host", "errno 101", "errno -3")
+
 # Codes that mean "alive, just defensive": bot walls, rate limits, auth gates.
 OK = set(range(200, 400)) | {401, 403, 429, 405, 406, 999}
 
@@ -114,6 +132,10 @@ def check(tool):
         if i < 2:
             time.sleep(2 * (i + 1))
     alive = code in OK if code is not None else False
+    if not alive and err and any(m in err.lower() for m in INFRA_ERRORS):
+        return {"name": tool["n"], "cat": tool["c"], "url": url, "code": code,
+                "err": f"INFRA (not counted as dead) — {err}", "alive": True,
+                "infra": True}
     if alive:
         p = parked(url)
         if p:
@@ -130,11 +152,14 @@ def main():
         results = list(ex.map(check, tools))
 
     dead = [r for r in results if not r["alive"]]
-    for r in results:
-        if not r["alive"]:
-            print(f"  DEAD  {r['code'] or r['err']}  {r['name']}  {r['url']}", flush=True)
+    infra = [r for r in results if r.get("infra")]
+    for r in dead:
+        print(f"  DEAD  {r['code'] or r['err']}  {r['name']}  {r['url']}", flush=True)
+    for r in infra:
+        print(f"  SKIP  {r['err']}  {r['name']}  {r['url']}", flush=True)
 
-    print(f"\n{len(results) - len(dead)}/{len(results)} alive · {len(dead)} dead")
+    print(f"\n{len(results) - len(dead)}/{len(results)} alive · {len(dead)} dead"
+          + (f" · {len(infra)} unreachable from this runner (not counted)" if infra else ""))
 
     if dead:
         with open(OUT, "w") as f:
