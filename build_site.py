@@ -520,3 +520,41 @@ print(f"  index.html rebuilt · {_n} tools spliced in untouched")
 _json_out = os.path.join(_here, "tools.json")
 open(_json_out, "w", encoding="utf-8").write(TOYS)
 print(f"  tools.json written  · {_n} tools, byte-identical to the site")
+
+# ── README counts, synced from the same array ──────────────────────────────────────
+# The page stopped carrying a hardcoded count in 05d566c. The README never did — it
+# still said 379 in four places and carried five per-category counts that had to be
+# hand-edited together or quietly go wrong. Prose cannot fail a test, so the build
+# writes it instead. Every substitution is asserted: if the README wording changes and
+# a pattern stops matching, this raises rather than silently leaving a stale number.
+import re as _re
+from collections import Counter as _Counter
+
+_toys = json.loads(TOYS)
+_by_cat = _Counter(t["c"] for t in _toys)
+_readme = os.path.join(_here, "README.md")
+_r = open(_readme, encoding="utf-8").read()
+
+_subs = [
+    (r"\*\*\d+ manually reviewed entries\*\*", f"**{_n} manually reviewed entries**"),
+    (r"you'll see all \d+ before any repeat", f"you'll see all {_n} before any repeat"),
+    (r"the same \d+ entries the site uses", f"the same {_n} entries the site uses"),
+]
+_cat_rows = [("🟣 \\*\\*Fun\\*\\*", "fun"), ("🟡 \\*\\*Mac Candy\\*\\*", "candy"),
+             ("🟢 \\*\\*Agent Power\\*\\*", "agent"), ("🔵 \\*\\*Creator\\*\\*", "creator"),
+             ("🪟 \\*\\*Windows Candy\\*\\*", "win")]
+for _label, _key in _cat_rows:
+    _subs.append((rf"(\| {_label} \| )\d+( \|)", rf"\g<1>{_by_cat[_key]}\g<2>"))
+
+for _pat, _rep in _subs:
+    _r, _k = _re.subn(_pat, _rep, _r)
+    if _k == 0:
+        raise SystemExit(
+            f"README sync FAILED: pattern {_pat!r} matched nothing.\n"
+            "The wording changed and a count is now stale. Fix the pattern — do not "
+            "hand-edit the number, that is the failure this code exists to prevent."
+        )
+
+open(_readme, "w", encoding="utf-8").write(_r)
+print(f"  README synced       · {_n} total · " +
+      " ".join(f"{k}:{_by_cat[k]}" for k in ("fun", "candy", "agent", "creator", "win")))
