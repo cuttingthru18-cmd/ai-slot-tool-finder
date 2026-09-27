@@ -222,17 +222,6 @@ footer a{color:var(--gold-dim)}
 .machine.jackpot .cabinet,.machine.jackpot .leverbox{
   border-color:var(--gold); box-shadow:0 0 50px rgba(255,215,0,.45), 0 22px 60px rgba(0,0,0,.6)}
 
-/* ---------- the three lanes ----------
-   Three different symbols are noise until you know what each column is FOR. The labels
-   are the whole reason the split is readable, so they sit under the glass, not in prose
-   somewhere else on the page. */
-.lanes{display:flex; gap:12px; margin-top:10px}
-.lanes span{
-  width:104px; text-align:center;
-  font:700 8.5px var(--mono); letter-spacing:.18em; color:#5d5748;
-}
-.machine.jackpot .lanes span{color:var(--gold-dim)}
-
 /* ---------- near-miss: reel 3 hesitates ---------- */
 .reel.tease{box-shadow:
     0 0 0 2px #b08900, 0 0 0 3px #2a2418, 0 0 0 4px #8a7233,
@@ -256,7 +245,6 @@ footer a{color:var(--gold-dim)}
 @media (max-width:520px){
   .reel{width:76px; height:92px} .cell{height:92px; font-size:42px}
   .leverbox{width:62px} .lever{transform-origin:50% 160px}
-  .lanes span{width:76px; font-size:7.5px; letter-spacing:.12em}
 }
 </style>
 </head>
@@ -281,7 +269,6 @@ footer a{color:var(--gold-dim)}
       <div class="reel" id="r2"><div class="strip"></div></div>
       <div class="reel" id="r3"><div class="strip"></div></div>
     </div>
-    <div class="lanes"><span>LANE</span><span>TOOL</span><span>SOURCE</span></div>
   </div>
   <div class="leverbox">
     <div class="hint">PULL ↓</div>
@@ -537,16 +524,6 @@ paintFound();
 /* ---- a spin you can send someone ----
    Every pull used to be a social dead end: a great find, and no way to point at it.
    The slug is derived from the name, so no id has to be stored in tools.json. */
-/* ---- the three lanes ----
-   Each reel answers a different question about the same result: which lane it came from,
-   what it is, and where it lives. All three are read off the tool's own record — nothing
-   new is stored, and nothing is invented to fill a column. */
-function catEmoji(c){ return {fun:'🟣',candy:'🟡',agent:'🟢',creator:'🔵',win:'🪟'}[c] || '🎰'; }
-function kindEmoji(u){
-  return /github\.com|gitlab\.com|codeberg\.org|sourceforge\.net/i.test(u) ? '🐙' : '🌐';
-}
-function lanes(toy){ return [catEmoji(toy.c), toy.e, kindEmoji(toy.u)]; }
-
 function slug(n){ return n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
 function findBySlug(s){
   for(var i=0;i<TOYS.length;i++) if(slug(TOYS[i].n)===s) return TOYS[i];
@@ -581,16 +558,15 @@ function spin(){
   var jackpot = Math.random() < 0.08;
   var tease   = !jackpot && Math.random() < 0.28;
 
-  // THE THREE LANES. Normally the reels do NOT match — each one answers a different
-  // question, so the payline reads left to right as lane · tool · source. On a jackpot
-  // they snap into alignment instead, which makes a matching line the RARE event rather
-  // than the default. Three-of-a-kind still means something; it just no longer means
-  // "a spin happened".
-  var syms  = jackpot ? ['💎','💎','💎'] : lanes(toy);
-  var decoy = tease ? (function(){ var d; do { d=rand(E); } while(d===syms[2]); return d; })() : null;
+  // Three of a kind, and on a jackpot they are diamonds instead of the tool's own symbol.
+  // A split payline was tried and pulled on 2026-09-27: emoji carry concrete things well
+  // and abstract categories badly — a blue circle cannot say "creator", a globe cannot say
+  // "website", and labelling the columns only explained a code nobody wanted to learn.
+  var symbol = jackpot ? '💎' : toy.e;
+  var decoy  = tease ? (function(){ var d; do { d=rand(E); } while(d===symbol); return d; })() : null;
 
   reels.forEach(function(r){ r.classList.add('blur') });
-  strips.forEach(function(s,i){ buildStrip(s, syms[i], i===2?decoy:null) });
+  strips.forEach(function(s,i){ buildStrip(s, symbol, i===2?decoy:null) });
   // Cells are 124px on desktop but 92px on mobile (CSS media query). The strip
   // travel is SPINS*CELL, so a HARDCODED CELL landed the reel between cells on
   // phones — the winning symbol fell outside the window and read as blank/glitchy
@@ -782,8 +758,7 @@ document.addEventListener('keydown',function(e){
   if(!m) return;
   var toy=findBySlug(m[1].toLowerCase());
   if(!toy) return;
-  var L=lanes(toy);
-  strips.forEach(function(s,i){ s.innerHTML='<div class="cell">'+L[i]+'</div>'; });
+  strips.forEach(function(s){ s.innerHTML='<div class="cell">'+toy.e+'</div>'; });
   land(toy,false);
   var c=document.getElementById('catdesc');
   if(c) c.textContent='Someone sent you this one. Pull the lever for a different find.';
