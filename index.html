@@ -181,6 +181,38 @@ h1{font-size:clamp(26px,5vw,38px); margin:0 0 10px; letter-spacing:-.01em; text-
 footer{margin-top:34px; font:400 11px var(--mono); color:#544e42; text-align:center}
 footer a{color:var(--gold-dim)}
 
+/* ---------- jackpot: the rare pull ---------- */
+/* A different KIND of result needs a different kind of frame, or it reads as the same
+   card with a word added. Gold ground, dark ink, and a ribbon that names it. */
+.card.jackpot{
+  background:linear-gradient(135deg,#FFE86B,#FFD700 42%,#E0AC00);
+  box-shadow:0 24px 70px rgba(0,0,0,.6), 0 0 0 2px #FFF6C9, 0 0 60px rgba(255,215,0,.5);
+}
+.card.jackpot h2, .card.jackpot p{color:#141310}
+.card.jackpot a.open{background:#141310; color:var(--gold)}
+.card.jackpot .tell{border-color:#141310; color:#141310}
+.card.jackpot .tell:hover{background:#141310; color:var(--gold)}
+.ribbon{display:none; font:700 10px var(--mono); letter-spacing:.2em; color:#6d4b00; margin:0 0 8px}
+.card.jackpot .ribbon{display:block}
+.machine.jackpot .cabinet,.machine.jackpot .leverbox{
+  border-color:var(--gold); box-shadow:0 0 50px rgba(255,215,0,.45), 0 22px 60px rgba(0,0,0,.6)}
+
+/* ---------- near-miss: reel 3 hesitates ---------- */
+.reel.tease{box-shadow:
+    0 0 0 2px #b08900, 0 0 0 3px #2a2418, 0 0 0 4px #8a7233,
+    inset 0 14px 22px rgba(0,0,0,.9), inset 0 -14px 22px rgba(0,0,0,.9),
+    0 0 16px rgba(255,215,0,.30)}
+
+/* ---------- sound + counter, sitting with the categories ---------- */
+#meta{display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin:0 0 18px}
+#snd{background:#221d13; color:#c9c4b6; border:1px solid var(--line); border-radius:16px;
+  padding:6px 13px; font:700 11px var(--mono); letter-spacing:.08em; cursor:pointer; transition:.18s}
+#snd:hover{border-color:var(--gold-dim); color:var(--text)}
+#snd[aria-pressed="true"]{background:var(--gold); color:#141310; border-color:var(--gold)}
+#snd:focus-visible,.cat:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+#found{font:700 11px var(--mono); letter-spacing:.08em; color:var(--dim)}
+#found b{color:var(--gold); font-weight:700; font-variant-numeric:tabular-nums}
+
 @media (prefers-reduced-motion: reduce){
   *{animation:none !important; transition:none !important}
   .reel.blur .strip{filter:none}
@@ -200,6 +232,10 @@ footer a{color:var(--gold-dim)}
 
 <div id="cats"></div>
 <p id="catdesc">All 541 in one machine — pure discovery chaos.</p>
+<div id="meta">
+  <button id="snd" type="button" aria-pressed="false">🔇 SOUND OFF</button>
+  <span id="found">FOUND <b>0</b> OF 541</span>
+</div>
 
 <div class="machine" id="machine">
   <div class="cabinet">
@@ -219,11 +255,13 @@ footer a{color:var(--gold-dim)}
 </div>
 
 <div class="card" id="card">
+  <p class="ribbon" id="tribbon">★ JACKPOT PULL</p>
   <h2 id="tname"></h2>
   <p id="tdesc"></p>
   <div class="btns">
     <a class="open" id="topen" href="#" target="_blank" rel="noopener">OPEN IT →</a>
     <button class="tell" id="ttell" type="button">COPY FOR YOUR AI ASSISTANT</button>
+    <button class="tell" id="tlink" type="button">COPY LINK TO THIS</button>
   </div>
 </div>
 
@@ -264,6 +302,33 @@ var TOYS=[{"n": "Radio Garden", "e": "📻", "c": "fun", "d": "Spin a 3D globe a
   window.__setHue=function(h){ target=h; };
   window.__pulse =function(){ pulse=1; };          // the machine calls this on every pull
 
+  /* A win already lights the reels; the ROOM should react too, or the payoff stops at
+     the cabinet edge. Sparks are spawned on demand and die off — they are not part of
+     the three standing layers, so an idle machine costs nothing extra. */
+  var sparks=[];
+  window.__burst=function(n,gold){
+    for(var i=0;i<n;i++){
+      var ang=Math.random()*6.2832, sp=(Math.random()*0.9+0.25);
+      sparks.push({x:.5,y:.42,vx:Math.cos(ang)*sp*.0042,vy:Math.sin(ang)*sp*.0042-.0006,
+                   life:1,r:Math.random()*2.6+1.2,g:!!gold});
+    }
+    if(sparks.length>420) sparks.splice(0,sparks.length-420);
+  };
+  function drawSparks(){
+    for(var i=sparks.length-1;i>=0;i--){
+      var s=sparks[i];
+      s.x+=s.vx; s.y+=s.vy; s.vy+=0.000085;         // a little gravity so they arc, not drift
+      s.life-=0.016;
+      if(s.life<=0){ sparks.splice(i,1); continue; }
+      var px=s.x*W, py=s.y*H, r=s.r*DPR, R=r*5;
+      var g=x.createRadialGradient(px,py,0,px,py,R);
+      var hh=s.g?48:hue, al=s.life*0.85;
+      g.addColorStop(0,'hsla('+hh+',100%,72%,'+al+')');
+      g.addColorStop(1,'hsla('+hh+',100%,60%,0)');
+      x.fillStyle=g; x.beginPath(); x.arc(px,py,R,0,6.2832); x.fill();
+    }
+  }
+
   function layer(P,t,boost){
     for(var i=0;i<P.length;i++){
       var p=P[i];
@@ -294,8 +359,78 @@ var TOYS=[{"n": "Radio Garden", "e": "📻", "c": "fun", "d": "Spin a 3D globe a
     layer(far, t, 7);
     layer(mid, t, 5);
     layer(near,t, 4);
+    drawSparks();
     x.globalCompositeOperation='source-over';
   })(0);
+})();
+
+/* ============ sound ============
+   A slot machine with no sound is half a slot machine — the tension lives in the three
+   staggered clacks, not in the chime at the end. All of it is synthesised at runtime:
+   no files, no network, nothing added to the one-HTML-file promise.
+
+   OFF by default, and it stays off until the visitor asks. Browsers refuse audio before
+   a gesture anyway, but the real reason is simpler: people open links at work. */
+var SFX=(function(){
+  var ac=null, on=false;
+  function ctx(){
+    if(!ac){ var C=window.AudioContext||window.webkitAudioContext; if(!C) return null; ac=new C(); }
+    if(ac.state==='suspended') ac.resume();
+    return ac;
+  }
+  var nb=null;                                    // one noise buffer, reused
+  function noise(a){
+    if(!nb){
+      nb=a.createBuffer(1, Math.floor(a.sampleRate*0.3), a.sampleRate);
+      var d=nb.getChannelData(0);
+      for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    }
+    var s=a.createBufferSource(); s.buffer=nb; return s;
+  }
+  function shape(g,t,peak,dur){
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(peak,t+0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  }
+  function tone(freq,dur,peak,type,when){
+    var a=ctx(); if(!a||!on) return;
+    var t=a.currentTime+(when||0);
+    var o=a.createOscillator(), g=a.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+    shape(g,t,peak,dur); o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t+dur+0.02);
+  }
+  function thud(freq,dur,peak,when){
+    var a=ctx(); if(!a||!on) return;
+    var t=a.currentTime+(when||0);
+    var o=a.createOscillator(), g=a.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(freq,t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(20,freq*0.4),t+dur);
+    shape(g,t,peak,dur); o.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t+dur+0.02);
+  }
+  function clack(pitch,when,peak){
+    var a=ctx(); if(!a||!on) return;
+    var t=a.currentTime+(when||0);
+    var s=noise(a), f=a.createBiquadFilter(), g=a.createGain();
+    f.type='bandpass'; f.frequency.setValueAtTime(pitch,t); f.Q.value=7;
+    shape(g,t,peak||0.30,0.075);
+    s.connect(f); f.connect(g); g.connect(a.destination);
+    s.start(t); s.stop(t+0.1);
+    thud(pitch*0.32,0.09,(peak||0.30)*0.5,when||0);   // the body under the click
+  }
+  return {
+    toggle:function(){ on=!on; if(on){ ctx(); clack(900,0,0.18); } return on; },
+    lever:function(){ clack(420,0,0.22); thud(90,0.16,0.30,0.01); },
+    reel:function(i){ clack(520+i*190, 0, 0.30); },
+    tease:function(){ tone(660,0.09,0.10,'square'); tone(640,0.09,0.09,'square',0.13); },
+    win:function(){ [784,988,1319].forEach(function(f,i){ tone(f,0.34,0.13,'triangle',i*0.085); }); },
+    jackpot:function(){
+      [523,659,784,1047,1319].forEach(function(f,i){ tone(f,0.5,0.14,'triangle',i*0.075); });
+      [0,.07,.14,.21,.28,.35].forEach(function(d){ clack(1500+Math.random()*900,d,0.10); });
+    }
+  };
 })();
 
 /* ============ the machine ============ */
@@ -339,9 +474,43 @@ function draw(){
   }
   return bag.pop();
 }
-function buildStrip(el, winner){
+
+/* ---- what you've actually seen, across visits ----
+   The bag stops repeats inside one session; it forgets on reload. Keeping the set of
+   URLs you've landed on turns 541 from a number in the copy into a number about YOU.
+   Storage can be blocked or full (private windows, cleared site data) — every read and
+   write is guarded, and the machine works identically when it fails. */
+var SEEN=(function(){
+  try{ return new Set(JSON.parse(localStorage.getItem('astf.seen')||'[]')); }
+  catch(e){ return new Set(); }
+})();
+var foundEl=document.getElementById('found');
+function paintFound(){
+  if(foundEl) foundEl.innerHTML='FOUND <b>'+SEEN.size+'</b> OF '+TOYS.length;
+}
+function markSeen(u){
+  if(SEEN.has(u)) return;
+  SEEN.add(u);
+  try{ localStorage.setItem('astf.seen', JSON.stringify(Array.from(SEEN))); }catch(e){}
+  paintFound();
+}
+paintFound();
+
+/* ---- a spin you can send someone ----
+   Every pull used to be a social dead end: a great find, and no way to point at it.
+   The slug is derived from the name, so no id has to be stored in tools.json. */
+function slug(n){ return n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+function findBySlug(s){
+  for(var i=0;i<TOYS.length;i++) if(slug(TOYS[i].n)===s) return TOYS[i];
+  return null;
+}
+function buildStrip(el, winner, decoy){
   var h='';
   for(var i=0;i<SPINS;i++) h+='<div class="cell">'+rand(E)+'</div>';
+  // A near-miss needs a WRONG symbol sitting one cell short of the payline, so the reel
+  // can stop on it, hold, and then click one more. Without a real cell there, "nearly"
+  // is just a pause — and a pause reads as a bug, not as tension.
+  if(decoy) h+='<div class="cell">'+decoy+'</div>';
   h+='<div class="cell">'+winner+'</div>';
   el.innerHTML=h;
   el.style.transition='none';
@@ -354,9 +523,20 @@ idle();
 function spin(){
   if(spinning) return;
   spinning=true; machine.classList.add('spinning'); card.style.display='none';
+  machine.classList.remove('jackpot');
   var toy=draw();
+  SFX.lever();
+
+  // A slot machine is compulsive because of the pulls that ALMOST pay, not the ones that
+  // do. Two rolls decide the shape of this spin, and they are deliberately lopsided: the
+  // jackpot is rare enough to stay special, the near-miss common enough to be felt.
+  var jackpot = Math.random() < 0.08;
+  var tease   = !jackpot && Math.random() < 0.28;
+  var symbol  = jackpot ? '💎' : toy.e;
+  var decoy   = tease ? (function(){ var d; do { d=rand(E); } while(d===symbol); return d; })() : null;
+
   reels.forEach(function(r){ r.classList.add('blur') });
-  strips.forEach(function(s){ buildStrip(s, toy.e) });
+  strips.forEach(function(s,i){ buildStrip(s, symbol, i===2?decoy:null) });
   // Cells are 124px on desktop but 92px on mobile (CSS media query). The strip
   // travel is SPINS*CELL, so a HARDCODED CELL landed the reel between cells on
   // phones — the winning symbol fell outside the window and read as blank/glitchy
@@ -366,7 +546,41 @@ function spin(){
 
   if(window.__pulse) window.__pulse();                    // shockwave through the background
 
+  // the bounce: a real reel overshoots the payline and kicks back
+  function bounce(i, cells){
+    var y=cells*CELL;
+    strips[i].style.transition='transform 320ms cubic-bezier(.34,1.7,.5,1)';
+    strips[i].style.transform='translateY(-'+(y-7)+'px)';
+    setTimeout(function(){
+      strips[i].style.transition='transform 180ms ease-out';
+      strips[i].style.transform='translateY(-'+y+'px)';
+    },160);
+    reels[i].classList.add('hit');                         // small flash as THIS reel lands
+    setTimeout(function(){ reels[i].classList.remove('hit') }, 520);
+    SFX.reel(i);
+  }
+
+  function payout(){
+    // ALL THREE LANDED — the win. Everything fires at once.
+    var reelsEl=document.querySelector('.reels');
+    reels.forEach(function(r){ r.classList.remove('hit','win','tease'); });
+    reelsEl.classList.remove('win');
+    void reels[0].offsetWidth;                             // restart the animation cleanly
+    reels.forEach(function(r){ r.classList.add('win') });
+    reelsEl.classList.add('win');
+    if(window.__pulse) window.__pulse();                   // background shockwave on the win
+    if(window.__burst) window.__burst(jackpot?150:48, jackpot);
+    if(jackpot){ machine.classList.add('jackpot'); SFX.jackpot(); } else { SFX.win(); }
+    setTimeout(function(){
+      reels.forEach(function(r){ r.classList.remove('win') });
+      reelsEl.classList.remove('win');
+      machine.classList.remove('jackpot');
+    }, jackpot?2400:1550);
+    setTimeout(function(){ land(toy, jackpot) }, 340);     // card lands INTO the glow
+  }
+
   [1700,2400,3150].forEach(function(dur,i){
+    var teasing = (i===2 && tease);
     requestAnimationFrame(function(){
       // rips away, decelerates hard, then SETTLES past the mark and snaps back
       strips[i].style.transition='transform '+dur+'ms cubic-bezier(.08,.82,.16,1.04)';
@@ -375,40 +589,46 @@ function spin(){
     // un-blur just BEFORE it stops — the symbol sharpens as it slows. That's the tell.
     setTimeout(function(){ reels[i].classList.remove('blur') }, dur-380);
     setTimeout(function(){
-      // the bounce: a real reel overshoots the payline and kicks back
-      strips[i].style.transition='transform 320ms cubic-bezier(.34,1.7,.5,1)';
-      strips[i].style.transform='translateY(-'+(SPINS*CELL - 7)+'px)';
-      setTimeout(function(){
-        strips[i].style.transition='transform 180ms ease-out';
-        strips[i].style.transform='translateY(-'+(SPINS*CELL)+'px)';
-      },160);
-      reels[i].classList.add('hit');                       // small flash as THIS reel lands
-      setTimeout(function(){ reels[i].classList.remove('hit') }, 520);
-
-      if(i===2){
-        // ALL THREE LANDED — the win. Everything fires at once.
-        var reelsEl=document.querySelector('.reels');
-        reels.forEach(function(r){ r.classList.remove('hit','win'); });
-        reelsEl.classList.remove('win');
-        void reels[0].offsetWidth;                         // restart the animation cleanly
-        reels.forEach(function(r){ r.classList.add('win') });
-        reelsEl.classList.add('win');
-        if(window.__pulse) window.__pulse();               // background shockwave on the win
-        setTimeout(function(){
-          reels.forEach(function(r){ r.classList.remove('win') });
-          reelsEl.classList.remove('win');
-        }, 1550);
-        setTimeout(function(){ land(toy) }, 340);          // card lands INTO the glow
+      if(!teasing){
+        bounce(i, SPINS);
+        if(i===2) payout();
+        return;
       }
+      // NEAR MISS. It stops dead on the wrong symbol, sits there long enough for you to
+      // read it and believe the pull is over, then clicks one more cell. The hold IS the
+      // effect: shorten it and the reel just looks slow.
+      bounce(2, SPINS);
+      reels[2].classList.add('tease');
+      SFX.tease();
+      setTimeout(function(){
+        reels[2].classList.remove('tease');
+        strips[2].style.transition='transform 380ms cubic-bezier(.2,.9,.25,1.05)';
+        strips[2].style.transform='translateY(-'+((SPINS+1)*CELL)+'px)';
+        setTimeout(function(){ bounce(2, SPINS+1); payout(); }, 380);
+      }, 620);
     }, dur);
   });
 }
 
-function land(toy){
+function land(toy, jackpot){
   spinning=false; machine.classList.remove('spinning');
   document.getElementById('tname').textContent=toy.n;
   document.getElementById('tdesc').textContent=toy.d;
   document.getElementById('topen').href=toy.u;
+  card.classList.toggle('jackpot', !!jackpot);
+  markSeen(toy.u);
+
+  // the pull, addressable. Same page, one query param — nothing to store server-side.
+  var link=document.getElementById('tlink');
+  link.classList.remove('done'); link.textContent='COPY LINK TO THIS';
+  link.onclick=function(){
+    var url=location.origin+location.pathname+'?t='+slug(toy.n);
+    var ok=function(){ link.classList.add('done'); link.textContent='LINK COPIED'; };
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(ok,function(){ showFallback(url,link); });
+    } else showFallback(url,link);
+  };
+
   var tell=document.getElementById('ttell');
   tell.classList.remove('done'); tell.textContent='COPY FOR YOUR AI ASSISTANT';
   tell.onclick=function(){
@@ -468,6 +688,51 @@ lever.addEventListener('click',function(){
 lever.addEventListener('keydown',function(e){
   if(e.key==='Enter'||e.key===' '){ e.preventDefault(); if(!spinning) spin(); }
 });
+
+/* Clipboard is refused often enough (permissions, older browsers, embedded views) that a
+   silent failure would just look like a dead button. Fall back to text you can select. */
+function showFallback(text, btn){
+  var box=document.getElementById('linkbox')||document.createElement('textarea');
+  box.id='linkbox'; box.value=text; box.rows=2;
+  box.style.cssText='width:100%;margin-top:10px;padding:8px;font-size:12px;border:1.5px solid #141310;border-radius:6px';
+  btn.parentElement.parentElement.appendChild(box); box.select();
+  btn.textContent='COPY THIS ↓';
+}
+
+/* ---- sound toggle ---- */
+var sndBtn=document.getElementById('snd');
+sndBtn.addEventListener('click',function(){
+  var on=SFX.toggle();
+  sndBtn.setAttribute('aria-pressed', on?'true':'false');
+  sndBtn.textContent = on ? '🔊 SOUND ON' : '🔇 SOUND OFF';
+});
+
+/* ---- spacebar pulls the lever ----
+   The lever already takes Enter and Space when it HAS focus. Making space work anywhere
+   is what turns it from a page into a machine you sit at. Ignore it while typing, or
+   while a control has focus and space already means "activate that". */
+document.addEventListener('keydown',function(e){
+  if(e.key!==' '&&e.code!=='Space') return;
+  var a=document.activeElement, tag=a?a.tagName:'';
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||tag==='BUTTON'||tag==='A'||tag==='SUMMARY') return;
+  if(a&&a.isContentEditable) return;
+  e.preventDefault();
+  if(!spinning) spin();
+});
+
+/* ---- arriving from someone else's link ----
+   Land it already won, with no spin: they were sent THIS tool, and making them watch
+   three reels to reach it would be theatre at the visitor's expense. */
+(function(){
+  var m=/[?&]t=([a-z0-9-]+)/i.exec(location.search);
+  if(!m) return;
+  var toy=findBySlug(m[1].toLowerCase());
+  if(!toy) return;
+  strips.forEach(function(s){ s.innerHTML='<div class="cell">'+toy.e+'</div>'; });
+  land(toy,false);
+  var c=document.getElementById('catdesc');
+  if(c) c.textContent='Someone sent you this one. Pull the lever for a different find.';
+})();
 
 /* ---- the whole shelf, browsable ---- */
 document.getElementById('inv').innerHTML =
