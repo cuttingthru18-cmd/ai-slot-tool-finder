@@ -566,21 +566,33 @@ function spin(){
   // A slot machine is compulsive because of the pulls that ALMOST pay, not the ones that
   // do. Two rolls decide the shape of this spin, and they are deliberately lopsided: the
   // jackpot is rare enough to stay special, the near-miss common enough to be felt.
+  // Every roll that decides the SHAPE of this spin happens here, first and in a fixed
+  // order, before anything else touches Math.random. buildStrip fills 34 cells with
+  // rand(E) and the decoy loop retries on collision, so the number of calls after this
+  // point is unpredictable — which would make the spin shape impossible to force in a
+  // test. Four rolls, always these four, always in this order.
   var jackpot = Math.random() < 0.08;
+  // WHETHER it hesitates. Firing every pull made it furniture — you stop watching
+  // something that always happens.
+  var willTease = Math.random() < 0.42;
+  // WHICH reel hesitates. Pinning it to reel three made it a fixed beat: you knew where
+  // to look before the reels moved. The last reel most of the time, because that is where
+  // a stall hurts most, but sometimes the first or second, which is a different feeling
+  // entirely — the stall arrives before you have committed to caring.
+  var teaseAt = willTease ? (function(){ var r=Math.random(); return r<0.62?2:(r<0.86?1:0); })() : -1;
+  // HOW LONG it stares. Varied so the machine never feels metronomic; a jackpot hangs longer.
+  var HOLD = (jackpot ? 1250 : 820) + Math.round(Math.random()*280);
 
   // Three of a kind, and on a jackpot they are diamonds instead of the tool's own symbol.
   // A split payline was tried and pulled on 2026-09-27: emoji carry concrete things well
   // and abstract categories badly — a blue circle cannot say "creator", a globe cannot say
   // "website", and labelling the columns only explained a code nobody wanted to learn.
   var symbol = jackpot ? '💎' : toy.e;
-  // The wrong symbol reel three creeps onto before it moves one more. ALWAYS built now:
-  // the near-miss stopped being an occasional event and became the house move.
+  // The wrong symbol a reel creeps onto before it moves one more.
   var decoy  = (function(){ var d; do { d=rand(E); } while(d===symbol); return d; })();
-  // Vary the stare so the machine never feels metronomic, and let a jackpot hang longer.
-  var HOLD   = (jackpot ? 1250 : 820) + Math.round(Math.random()*280);
 
   reels.forEach(function(r){ r.classList.add('blur') });
-  strips.forEach(function(s,i){ buildStrip(s, symbol, i===2?decoy:null) });
+  strips.forEach(function(s,i){ buildStrip(s, symbol, i===teaseAt?decoy:null) });
   // Cells are 124px on desktop but 92px on mobile (CSS media query). The strip
   // travel is SPINS*CELL, so a HARDCODED CELL landed the reel between cells on
   // phones — the winning symbol fell outside the window and read as blank/glitchy
@@ -623,48 +635,60 @@ function spin(){
     setTimeout(function(){ land(toy, jackpot) }, 340);     // card lands INTO the glow
   }
 
-  // ---- reels one and two: they land early and hand the moment over ----
-  [1700,2400].forEach(function(dur,i){
+  // ---- the landing order ----
+  // Reels must come to rest left to right whatever happens, or the machine looks broken.
+  // A hesitating reel costs EXTRA milliseconds, so every reel to its RIGHT keeps spinning
+  // for exactly that much longer. Without this, a stall on reel one finishes after reels
+  // two and three have already settled, and the whole cabinet reads as out of sync.
+  var CRAWL=900, STARE=HOLD, CLICK=560, EXTRA=CRAWL+STARE+CLICK;
+  var BASE=[1700,2400,3150];
+  function ripTime(i){ return BASE[i] + (teaseAt>=0 && i>teaseAt ? EXTRA : 0); }
+
+  reels.forEach(function(r,i){
+    var rip = ripTime(i), teasing = (i===teaseAt);
+
     requestAnimationFrame(function(){
-      // rips away, decelerates hard, then SETTLES past the mark and snaps back
-      strips[i].style.transition='transform '+dur+'ms cubic-bezier(.08,.82,.16,1.04)';
-      strips[i].style.transform='translateY(-'+(SPINS*CELL)+'px)';
+      // rips away and decelerates hard. A hesitating reel stops one cell SHORT of the
+      // payline, so there is somewhere left to crawl to.
+      strips[i].style.transition='transform '+rip+'ms cubic-bezier('+(teasing?'.05,.75,.12,1':'.08,.82,.16,1.04')+')';
+      strips[i].style.transform='translateY(-'+((teasing?SPINS-1:SPINS)*CELL)+'px)';
     });
     // un-blur just BEFORE it stops — the symbol sharpens as it slows. That's the tell.
-    setTimeout(function(){ reels[i].classList.remove('blur') }, dur-380);
-    setTimeout(function(){ bounce(i, SPINS); }, dur);
-  });
+    setTimeout(function(){ reels[i].classList.remove('blur') }, rip-(teasing?520:380));
 
-  // ---- reel three: the whole point of the pull ----
-  // Four phases, and every one of them is doing a job:
-  //   1 RIP     it tears down to the cell BEFORE the payline, decelerating the whole way
-  //   2 CRAWL   it inches the last cell onto a symbol that does NOT match the other two
-  //   3 STARE   it sits there, wrong, long enough that the pull reads as dead
-  //   4 CLICK   one more cell, slowly, and the line completes
-  // The crawl and the stare ARE the effect. A fast hop between the same positions reads
-  // as a stutter; it has to be slow enough that you give up on it first.
-  var P1=2600, P2=900, P3=HOLD, P4=560;
-  requestAnimationFrame(function(){
-    strips[2].style.transition='transform '+P1+'ms cubic-bezier(.05,.75,.12,1)';
-    strips[2].style.transform='translateY(-'+((SPINS-1)*CELL)+'px)';
+    if(!teasing){
+      setTimeout(function(){
+        bounce(i, SPINS);
+        if(i===2) payout();                 // reel three is always the last to rest
+      }, rip);
+      return;
+    }
+
+    // THE HESITATION. Three phases after the rip, and each is doing a job:
+    //   CRAWL  inches the last cell onto a symbol that does NOT match its neighbours
+    //   STARE  sits there, wrong, long enough that the pull reads as dead
+    //   CLICK  one more cell, slowly, and the line completes
+    // The crawl and the stare ARE the effect. Moving fast between the same two positions
+    // reads as a stutter; it has to be slow enough that you give up on it first.
+    setTimeout(function(){
+      strips[i].style.transition='transform '+CRAWL+'ms cubic-bezier(.25,.6,.2,1)';
+      strips[i].style.transform='translateY(-'+(SPINS*CELL)+'px)';
+      SFX.reel(i);
+    }, rip);
+    setTimeout(function(){
+      reels[i].classList.add('tease');      // amber ring: it has stopped, and it is wrong
+      SFX.tease();
+    }, rip+CRAWL);
+    setTimeout(function(){
+      reels[i].classList.remove('tease');
+      strips[i].style.transition='transform '+CLICK+'ms cubic-bezier(.3,.85,.25,1.02)';
+      strips[i].style.transform='translateY(-'+((SPINS+1)*CELL)+'px)';
+      setTimeout(function(){
+        bounce(i, SPINS+1);
+        if(i===2) payout();
+      }, CLICK);
+    }, rip+CRAWL+STARE);
   });
-  setTimeout(function(){ reels[2].classList.remove('blur'); }, P1-520);
-  setTimeout(function(){
-    // the crawl — eased so you can watch it arrive, never a snap
-    strips[2].style.transition='transform '+P2+'ms cubic-bezier(.25,.6,.2,1)';
-    strips[2].style.transform='translateY(-'+(SPINS*CELL)+'px)';
-    SFX.reel(2);
-  }, P1);
-  setTimeout(function(){
-    reels[2].classList.add('tease');        // amber ring: it has stopped, and it is wrong
-    SFX.tease();
-  }, P1+P2);
-  setTimeout(function(){
-    reels[2].classList.remove('tease');
-    strips[2].style.transition='transform '+P4+'ms cubic-bezier(.3,.85,.25,1.02)';
-    strips[2].style.transform='translateY(-'+((SPINS+1)*CELL)+'px)';
-    setTimeout(function(){ bounce(2, SPINS+1); payout(); }, P4);
-  }, P1+P2+P3);
 }
 
 function land(toy, jackpot){
