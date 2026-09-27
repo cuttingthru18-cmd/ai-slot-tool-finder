@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 menubar/dist/
 dead-links.md
+
+# local browser-verification screenshots
+.verify/

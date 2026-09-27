@@ -7,7 +7,7 @@ actual data.
 
 Exit 1 if any URL is dead. Writes dead-links.md for the issue body.
 """
-import json, os, sys, time, urllib.request, urllib.error, ssl, socket
+import json, os, re, sys, time, urllib.request, urllib.error, ssl, socket
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,31 +70,75 @@ PARKED_MARKERS = (
 )
 
 
-def parked(url):
-    """Return a reason string if this URL is a parked/for-sale page rather than a site."""
+# A parked domain is the LOUD failure. The quiet one is a page that is perfectly alive and
+# simply is not the tool any more: screely.com now serves a sports-betting site, and the URL
+# once listed for CheatSheet serves invoicing software. Both return a clean 200 with a real,
+# substantial body and no parking marker anywhere — every liveness check on earth passes them.
+#
+# Comparing the title to the TOOL NAME does not work: plenty of good entries never matched
+# (Subtitle Edit's page is titled "Nikse.dk"), so that flags dozens of healthy links and the
+# whole check gets ignored. What is diagnostic is CHANGE. The title recorded while a link was
+# known-good is the baseline; a title that moves away from it is the thing worth a human
+# glance. This is a WARNING and never fails the run — a gate that cries wolf gets ignored,
+# and that is the same failure in a different coat.
+SHUTDOWN_MARKERS = (
+    "has shut down", "has shut down.", "is shutting down", "we're shutting down",
+    "no longer available", "no longer maintained", "has been discontinued",
+    "service has ended", "this project is archived", "is sunsetting",
+    "this site is no longer", "development has stopped", "project has ended",
+)
+
+TITLES = os.path.join(ROOT, "link-titles.json")
+
+
+def _title_of(body):
+    m = re.search(r"<title[^>]*>(.*?)</title>", body, re.S | re.I)
+    if not m:
+        return ""
+    t = re.sub(r"<[^>]+>", " ", m.group(1))
+    t = re.sub(r"\s+", " ", t).strip()
+    return t[:120]
+
+
+def inspect(url):
+    """One GET, three questions: is it parked, has it announced a shutdown, what is its title?
+
+    Folded into a single fetch because the parked check already paid for the body; a second
+    request per URL would double a 541-link run for nothing.
+    """
     req = urllib.request.Request(url, method="GET", headers={"User-Agent": UA})
     try:
         with urllib.request.urlopen(req, timeout=20, context=CTX) as r:
             final = r.geturl()
-            body = r.read(6000).decode("utf-8", "replace")
+            body = r.read(60000).decode("utf-8", "replace")
     except Exception:
-        return None
+        return None, None, None
+
+    low = body.lower()
+    title = _title_of(body)
 
     for h in PARKED_HOSTS:
         if h in final.lower():
-            return f"redirects to parking host {h}"
+            return f"redirects to parking host {h}", None, title
 
-    low = body.lower()
     # A real site is not 1.5KB of nothing. Require BOTH a tiny body and a parking tell,
     # so a legitimate page that merely says "for sale" somewhere isn't condemned.
     if len(body) < 1500:
         for m in PARKED_MARKERS:
             if m in low:
-                return f"parked page ({m!r} in a {len(body)}-byte body)"
+                return f"parked page ({m!r} in a {len(body)}-byte body)", None, title
     for m in ("this domain is for sale", "buy this domain", "the domain name is for sale"):
         if m in low:
-            return f"parked page ({m!r})"
-    return None
+            return f"parked page ({m!r})", None, title
+
+    # Only trust a shutdown notice near the top of the page. The phrase appears in plenty of
+    # changelogs and blog archives further down, and condemning those is how this starts lying.
+    head = low[:6000]
+    for m in SHUTDOWN_MARKERS:
+        if m in head:
+            return None, f"shutdown notice on the page ({m!r})", title
+
+    return None, None, title
 
 
 def probe(url, method="HEAD", timeout=20):
@@ -147,10 +191,13 @@ def check(tool):
                 "err": f"UNVERIFIED — {err} after 3 tries", "alive": True,
                 "unverified": True}
     if alive:
-        p = parked(url)
+        p, shut, title = inspect(url)
         if p:
             return {"name": tool["n"], "cat": tool["c"], "url": url,
                     "code": code, "err": f"PARKED — {p}", "alive": False}
+        return {"name": tool["n"], "cat": tool["c"], "url": url,
+                "code": code, "err": err, "alive": True,
+                "title": title, "shutdown": shut}
     return {"name": tool["n"], "cat": tool["c"], "url": url,
             "code": code, "err": err, "alive": alive}
 
@@ -170,9 +217,42 @@ def main():
     for r in infra + unver:
         print(f"  SKIP  {r['err']}  {r['name']}  {r['url']}", flush=True)
 
+    # ── has the page stopped being the tool? ──
+    try:
+        base = json.load(open(TITLES))
+    except Exception:
+        base = {}
+    drift, seeded = [], 0
+    for r in results:
+        if not r.get("alive") or r.get("infra") or r.get("unverified"):
+            continue
+        if r.get("shutdown"):
+            drift.append((r, r["shutdown"]))
+            continue
+        t, was = r.get("title"), base.get(r["url"])
+        if not t:
+            continue
+        if was is None:
+            base[r["url"]] = t
+            seeded += 1
+        elif was != t:
+            drift.append((r, f"title changed: {was!r} → {t!r}"))
+            base[r["url"]] = t          # record the new one, so it reports once, not forever
+    # forget URLs that are no longer listed, so the baseline can't grow forever
+    base = {k: v for k, v in base.items() if k in {r["url"] for r in results}}
+    try:
+        json.dump(base, open(TITLES, "w"), indent=0, sort_keys=True, ensure_ascii=False)
+    except Exception as e:
+        print(f"  (could not write {os.path.basename(TITLES)}: {e})")
+
+    for r, why in drift:
+        print(f"  DRIFT {r['name']}  —  {why}\n        {r['url']}", flush=True)
+
     print(f"\n{len(results) - len(dead)}/{len(results)} alive · {len(dead)} dead"
           + (f" · {len(infra)} unreachable from this runner" if infra else "")
-          + (f" · {len(unver)} timed out, unverified — check these by hand" if unver else ""))
+          + (f" · {len(unver)} timed out, unverified — check these by hand" if unver else "")
+          + (f" · {len(drift)} changed — review by hand, NOT failures" if drift else "")
+          + (f" · {seeded} new baselines recorded" if seeded else ""))
 
     if dead:
         with open(OUT, "w") as f:
