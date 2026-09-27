@@ -222,11 +222,22 @@ footer a{color:var(--gold-dim)}
 .machine.jackpot .cabinet,.machine.jackpot .leverbox{
   border-color:var(--gold); box-shadow:0 0 50px rgba(255,215,0,.45), 0 22px 60px rgba(0,0,0,.6)}
 
-/* ---------- near-miss: reel 3 hesitates ---------- */
-.reel.tease{box-shadow:
-    0 0 0 2px #b08900, 0 0 0 3px #2a2418, 0 0 0 4px #8a7233,
-    inset 0 14px 22px rgba(0,0,0,.9), inset 0 -14px 22px rgba(0,0,0,.9),
-    0 0 16px rgba(255,215,0,.30)}
+/* ---------- near-miss: reel 3 stops on the wrong symbol and stares ----------
+   A frozen reel reads as a bug. A breathing one reads as a machine deciding. The pulse is
+   slow and small on purpose — it should register as hesitation, not as a new animation. */
+.reel.tease{animation:teasebreath 900ms ease-in-out infinite}
+@keyframes teasebreath{
+  0%,100%{box-shadow:
+    0 0 0 2px #8a6a00, 0 0 0 3px #2a2418, 0 0 0 4px #8a7233,
+    inset 0 14px 22px rgba(0,0,0,.92), inset 0 -14px 22px rgba(0,0,0,.92),
+    0 0 10px rgba(255,215,0,.16)}
+  50%{box-shadow:
+    0 0 0 2px #c79a00, 0 0 0 3px #2a2418, 0 0 0 4px #8a7233,
+    inset 0 14px 22px rgba(0,0,0,.86), inset 0 -14px 22px rgba(0,0,0,.86),
+    0 0 22px rgba(255,215,0,.40)}
+}
+/* the symbol it is stuck on leans very slightly — the reel straining against the stop */
+.reel.tease .cell{transform:translateY(1.5px)}
 
 /* ---------- sound + counter, sitting with the categories ---------- */
 #meta{display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin:0 0 18px}
@@ -556,14 +567,17 @@ function spin(){
   // do. Two rolls decide the shape of this spin, and they are deliberately lopsided: the
   // jackpot is rare enough to stay special, the near-miss common enough to be felt.
   var jackpot = Math.random() < 0.08;
-  var tease   = !jackpot && Math.random() < 0.28;
 
   // Three of a kind, and on a jackpot they are diamonds instead of the tool's own symbol.
   // A split payline was tried and pulled on 2026-09-27: emoji carry concrete things well
   // and abstract categories badly — a blue circle cannot say "creator", a globe cannot say
   // "website", and labelling the columns only explained a code nobody wanted to learn.
   var symbol = jackpot ? '💎' : toy.e;
-  var decoy  = tease ? (function(){ var d; do { d=rand(E); } while(d===symbol); return d; })() : null;
+  // The wrong symbol reel three creeps onto before it moves one more. ALWAYS built now:
+  // the near-miss stopped being an occasional event and became the house move.
+  var decoy  = (function(){ var d; do { d=rand(E); } while(d===symbol); return d; })();
+  // Vary the stare so the machine never feels metronomic, and let a jackpot hang longer.
+  var HOLD   = (jackpot ? 1250 : 820) + Math.round(Math.random()*280);
 
   reels.forEach(function(r){ r.classList.add('blur') });
   strips.forEach(function(s,i){ buildStrip(s, symbol, i===2?decoy:null) });
@@ -609,8 +623,8 @@ function spin(){
     setTimeout(function(){ land(toy, jackpot) }, 340);     // card lands INTO the glow
   }
 
-  [1700,2400,3150].forEach(function(dur,i){
-    var teasing = (i===2 && tease);
+  // ---- reels one and two: they land early and hand the moment over ----
+  [1700,2400].forEach(function(dur,i){
     requestAnimationFrame(function(){
       // rips away, decelerates hard, then SETTLES past the mark and snaps back
       strips[i].style.transition='transform '+dur+'ms cubic-bezier(.08,.82,.16,1.04)';
@@ -618,26 +632,39 @@ function spin(){
     });
     // un-blur just BEFORE it stops — the symbol sharpens as it slows. That's the tell.
     setTimeout(function(){ reels[i].classList.remove('blur') }, dur-380);
-    setTimeout(function(){
-      if(!teasing){
-        bounce(i, SPINS);
-        if(i===2) payout();
-        return;
-      }
-      // NEAR MISS. It stops dead on the wrong symbol, sits there long enough for you to
-      // read it and believe the pull is over, then clicks one more cell. The hold IS the
-      // effect: shorten it and the reel just looks slow.
-      bounce(2, SPINS);
-      reels[2].classList.add('tease');
-      SFX.tease();
-      setTimeout(function(){
-        reels[2].classList.remove('tease');
-        strips[2].style.transition='transform 380ms cubic-bezier(.2,.9,.25,1.05)';
-        strips[2].style.transform='translateY(-'+((SPINS+1)*CELL)+'px)';
-        setTimeout(function(){ bounce(2, SPINS+1); payout(); }, 380);
-      }, 620);
-    }, dur);
+    setTimeout(function(){ bounce(i, SPINS); }, dur);
   });
+
+  // ---- reel three: the whole point of the pull ----
+  // Four phases, and every one of them is doing a job:
+  //   1 RIP     it tears down to the cell BEFORE the payline, decelerating the whole way
+  //   2 CRAWL   it inches the last cell onto a symbol that does NOT match the other two
+  //   3 STARE   it sits there, wrong, long enough that the pull reads as dead
+  //   4 CLICK   one more cell, slowly, and the line completes
+  // The crawl and the stare ARE the effect. A fast hop between the same positions reads
+  // as a stutter; it has to be slow enough that you give up on it first.
+  var P1=2600, P2=900, P3=HOLD, P4=560;
+  requestAnimationFrame(function(){
+    strips[2].style.transition='transform '+P1+'ms cubic-bezier(.05,.75,.12,1)';
+    strips[2].style.transform='translateY(-'+((SPINS-1)*CELL)+'px)';
+  });
+  setTimeout(function(){ reels[2].classList.remove('blur'); }, P1-520);
+  setTimeout(function(){
+    // the crawl — eased so you can watch it arrive, never a snap
+    strips[2].style.transition='transform '+P2+'ms cubic-bezier(.25,.6,.2,1)';
+    strips[2].style.transform='translateY(-'+(SPINS*CELL)+'px)';
+    SFX.reel(2);
+  }, P1);
+  setTimeout(function(){
+    reels[2].classList.add('tease');        // amber ring: it has stopped, and it is wrong
+    SFX.tease();
+  }, P1+P2);
+  setTimeout(function(){
+    reels[2].classList.remove('tease');
+    strips[2].style.transition='transform '+P4+'ms cubic-bezier(.3,.85,.25,1.02)';
+    strips[2].style.transform='translateY(-'+((SPINS+1)*CELL)+'px)';
+    setTimeout(function(){ bounce(2, SPINS+1); payout(); }, P4);
+  }, P1+P2+P3);
 }
 
 function land(toy, jackpot){
